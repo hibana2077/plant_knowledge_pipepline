@@ -2,7 +2,7 @@
  * @Author: hibana2077 hibana2077@gmail.com
  * @Date: 2024-03-03 14:55:41
  * @LastEditors: hibana2077 hibana2077@gmail.com
- * @LastEditTime: 2024-03-03 15:28:32
+ * @LastEditTime: 2024-03-06 23:01:00
  * @FilePath: \plant_knowledge_pipepline\src\docs\preparation.md
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -37,7 +37,7 @@
 
 #### 實體（Entities）
 
-- **論文**：標題、摘要、關鍵詞、作者、發表日期、DOI
+- **論文**：標題、摘要、關鍵詞、作者、發表日期、DOI、內容
 - **研究主題**：名稱、描述
 - **作者**：名字、所屬機構、研究領域
 
