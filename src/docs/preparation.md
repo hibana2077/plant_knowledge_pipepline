@@ -2,7 +2,7 @@
  * @Author: hibana2077 hibana2077@gmail.com
  * @Date: 2024-03-03 14:55:41
  * @LastEditors: hibana2077 hibana2077@gmail.com
- * @LastEditTime: 2024-03-06 23:01:00
+ * @LastEditTime: 2024-03-06 23:03:02
  * @FilePath: \plant_knowledge_pipepline\src\docs\preparation.md
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -22,7 +22,7 @@
 
 - **作物**：名稱、種類、生長周期、種植條件
 - **病蟲害**：名稱、描述、防治方法
-- **農業技術**：名稱、類型、應用範圍、效果
+- **農業技術**：名稱、類型、應用範圍、效果、技術細節
 - **農業政策**：名稱、描述、適用地區
 
 #### 關係（Relations）
