@@ -2,7 +2,7 @@
 Author: hibana2077 hibana2077@gmail.com
 Date: 2024-03-07 19:42:28
 LastEditors: hibana2077 hibana2077@gmail.com
-LastEditTime: 2024-03-12 09:01:43
+LastEditTime: 2024-03-12 09:05:19
 FilePath: \plant_knowledge_pipepline\src\data_transform_node\main.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -129,10 +129,7 @@ def extract_and_store_graph(
     document: Document,
     nodes:Optional[List[str]] = None,
     rels:Optional[List[str]]=None) -> None:
-    # Extract graph data using OpenAI functions
     extract_chain = get_extraction_chain(nodes, rels)
-    # print(extract_chain)
-    # print("\n".join(dir(extract_chain)))
     print("invoke extract_chain")
     data = extract_chain.invoke({"query": document.page_content})
     pprint(data)
