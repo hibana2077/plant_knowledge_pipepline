@@ -2,7 +2,7 @@
 Author: hibana2077 hibana2077@gmail.com
 Date: 2024-03-07 19:42:28
 LastEditors: hibana2077 hibana2077@gmail.com
-LastEditTime: 2024-03-12 09:05:19
+LastEditTime: 2024-03-12 09:22:16
 FilePath: \plant_knowledge_pipepline\src\data_transform_node\main.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -132,14 +132,13 @@ def extract_and_store_graph(
     extract_chain = get_extraction_chain(nodes, rels)
     print("invoke extract_chain")
     data = extract_chain.invoke({"query": document.page_content})
-    pprint(data)
     # # Construct a graph document
-    # graph_document = GraphDocument(
-    #   nodes = [map_to_base_node(node) for node in data.nodes],
-    #   relationships = [map_to_base_relationship(rel) for rel in data.rels],
-    #   source = document
-    # )
-    # return graph_document
+    graph_document = GraphDocument(
+      nodes = [map_to_base_node(node) for node in data.nodes],
+      relationships = [map_to_base_relationship(rel) for rel in data.rels],
+      source = document
+    )
+    return graph_document
 
 # Read the wikipedia article
 raw_documents = ArxivLoader(query="2403.03410", load_max_docs=2).load()
