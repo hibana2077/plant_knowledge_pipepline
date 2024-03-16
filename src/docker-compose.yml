@@ -29,6 +29,15 @@ services:
       - data_transformer
       - data_collector
 
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "3003:3003"
+    depends_on:
+      - control_node
+
   neo4j:
     image: neo4j:latest
     ports:
