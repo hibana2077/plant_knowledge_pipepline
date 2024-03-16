@@ -7,6 +7,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3001:3001"
+    depends_on:
+      - neo4j
 
   data_collector:
     build:
@@ -25,6 +27,7 @@ services:
       - "3000:3000"
     depends_on:
       - data_transformer
+      - data_collector
 
   neo4j:
     image: neo4j:latest
