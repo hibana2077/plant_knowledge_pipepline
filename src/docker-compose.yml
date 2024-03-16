@@ -7,7 +7,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3001:3001"
-    runtime: nvidia
 
   neo4j:
     image: neo4j:latest
