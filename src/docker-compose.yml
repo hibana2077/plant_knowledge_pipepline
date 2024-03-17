@@ -5,8 +5,6 @@ services:
     build:
       context: ./data_transformer_node
       dockerfile: Dockerfile
-    ports:
-      - "3001:3001"
     depends_on:
       - neo4j
       - redis
@@ -15,8 +13,6 @@ services:
     build:
       context: ./data_collector_node
       dockerfile: Dockerfile
-    ports:
-      - "3002:3002"
     depends_on:
       - data_transformer
       - neo4j
