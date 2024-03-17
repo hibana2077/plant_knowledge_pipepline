@@ -5,6 +5,8 @@ services:
     build:
       context: ./data_transformer_node
       dockerfile: Dockerfile
+    environment:
+      - hadoop_namenode=your_namenode_ip
     depends_on:
       - neo4j
       - redis
@@ -13,8 +15,9 @@ services:
     build:
       context: ./data_collector_node
       dockerfile: Dockerfile
+    environment:
+      - hadoop_namenode=your_namenode_ip
     depends_on:
-      - data_transformer
       - neo4j
       - redis
 
