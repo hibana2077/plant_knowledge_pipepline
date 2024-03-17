@@ -9,6 +9,7 @@ services:
       - "3001:3001"
     depends_on:
       - neo4j
+      - redis
 
   data_collector:
     build:
@@ -18,6 +19,8 @@ services:
       - "3002:3002"
     depends_on:
       - data_transformer
+      - neo4j
+      - redis
 
   control_node:
     build:
@@ -28,6 +31,8 @@ services:
     depends_on:
       - data_transformer
       - data_collector
+      - neo4j
+      - redis
 
   dashboard:
     build:
@@ -37,6 +42,7 @@ services:
       - "3003:3003"
     depends_on:
       - control_node
+      - redis
 
   neo4j:
     image: neo4j:latest
@@ -57,3 +63,11 @@ services:
       - ./neo4j/import:/var/lib/neo4j/import
       - ./neo4j/plugins:/plugins
       - ./neo4j/conf:/conf
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis/data:/data
+      - ./redis/conf:/conf

@@ -1,0 +1,46 @@
+---
+import Navbar from '../layouts/Navbar.astro';
+import { Card, Metric, Text } from '@tremor/react';
+import { Divider } from '@tremor/react';
+---
+
+<!DOCTYPE html>
+<html>
+  <head>
+	<meta charset="utf-8">
+	<title>Dashboard</title>
+  </head>
+  <body>
+	<Navbar />
+    <div class="mx-auto max-w-screen-xl grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 mt-6">
+        <Card
+        className="mx-auto max-w-xs"
+        decoration="top"
+        decorationColor="indigo"
+        client:load
+        >
+            <p class="text-tremor-default text-tremor-content dark:text-dark-tremor-content">Scheduled Jobs</p>
+            <p class="text-3xl text-tremor-content-strong dark:text-dark-tremor-content-strong font-semibold">30</p>
+        </Card>
+        <Card
+        className="mx-auto max-w-xs"
+        decoration="top"
+        decorationColor="indigo"
+        client:load
+        >
+            <p class="text-tremor-default text-tremor-content dark:text-dark-tremor-content">Done Jobs</p>
+            <p class="text-3xl text-tremor-content-strong dark:text-dark-tremor-content-strong font-semibold">1,245</p>
+        </Card>
+        <Card
+        className="mx-auto max-w-xs"
+        decoration="top"
+        decorationColor="indigo"
+        client:load
+        >
+            <p class="text-tremor-default text-tremor-content dark:text-dark-tremor-content">Storages</p>
+            <p class="text-3xl text-tremor-content-strong dark:text-dark-tremor-content-strong font-semibold">2.45 GB</p>
+        </Card>
+    </div>
+    <Divider className='max-w-screen-xl' />
+  </body>
+</html>
