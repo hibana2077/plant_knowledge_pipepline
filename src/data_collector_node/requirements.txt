@@ -1,3 +1,4 @@
 redis
 libhdfs3
 hdfs3
+langchain
