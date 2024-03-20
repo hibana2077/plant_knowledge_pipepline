@@ -10,5 +10,6 @@ COPY . .
 
 ENV REDIS_HOST=redis
 ENV REDIS_PORT=6379
+ENV HEARTBEAT_INTERVAL=60
 
 CMD ["python", "main.py"]
