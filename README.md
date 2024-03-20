@@ -1,8 +1,8 @@
 <!--
  * @Author: hibana2077 hibana2077@gmail.com
  * @Date: 2024-03-03 14:51:05
- * @LastEditors: hibana2077 hibana2077@gmail.com
- * @LastEditTime: 2024-03-03 15:31:03
+ * @LastEditors: hibana2077 hibana2077@gmaill.com
+ * @LastEditTime: 2024-03-20 16:28:12
  * @FilePath: \plant_knowledge_pipepline\README.md
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -16,5 +16,4 @@ This is a Data pipeline for plant breeding knowledge.
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)
 ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)
 ![Grafana](https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white)
-![ELK](https://img.shields.io/badge/ELK-005571?style=for-the-badge&logo=elasticsearch&logoColor=white)
-![EFK](https://img.shields.io/badge/EFK-005571?style=for-the-badge&logo=elasticsearch&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
