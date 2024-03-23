@@ -15,7 +15,6 @@ from langchain_community.document_loaders import WebBaseLoader
 from pprint import pprint
 from warnings import simplefilter
 from urllib3.exceptions import InsecureRequestWarning
-from time import sleep
 
 # Basic config
 heartbeat_interval = os.getenv("HEARTBEAT_INTERVAL", 60)
