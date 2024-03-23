@@ -2,7 +2,7 @@
 Author: hibana2077 hibana2077@gmail.com
 Date: 2024-03-03 19:29:24
 LastEditors: hibana2077 hibana2077@gmail.com
-LastEditTime: 2024-03-20 14:51:20
+LastEditTime: 2024-03-23 20:45:47
 FilePath: \plant_knowledge_pipepline\src\data_collection_node\main.py
 Description: Scraping data from the web
 '''
@@ -21,10 +21,11 @@ from time import sleep
 heartbeat_interval = os.getenv("HEARTBEAT_INTERVAL", 60)
 
 # Connect to redis
-redis_host = os.getenv("REDIS_HOST", "localhost")
-redis_port = os.getenv("REDIS_PORT", 6379)
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = os.getenv("REDIS_PORT", 6379)
 
-# client = redis.StrictRedis(host=redis_host, port=redis_port, db=0)
+# HDFS config
+HDFS_HOST = os.getenv("HDFS_HOST", "localhost")
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -62,13 +63,13 @@ def process(job_type:str, url:str, allowed_url_patterns:list):
 if __name__ == "__main__":
     logger.info("Data collection node active")
     logger.info("Config:")
-    logger.info(f"REDIS_HOST: {redis_host}")
-    logger.info(f"REDIS_PORT: {redis_port}")
+    logger.info(f"REDIS_HOST: {REDIS_HOST}")
+    logger.info(f"REDIS_PORT: {REDIS_PORT}")
     heartbeat_reg = time.time()
     while True:
         try:
             # Connect to redis
-            client = redis.StrictRedis(host=redis_host, port=redis_port, db=0)
+            client = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=0)
             # Check for new Jobs
             job = client.blpop("data_collection_opens_jobs", 10)
             if job != None:
