@@ -2,7 +2,7 @@
 Author: hibana2077 hibana2077@gmail.com
 Date: 2024-03-03 19:29:24
 LastEditors: hibana2077 hibana2077@gmail.com
-LastEditTime: 2024-03-24 17:18:32
+LastEditTime: 2024-03-24 17:20:19
 FilePath: \plant_knowledge_pipepline\src\data_collection_node\main.py
 Description: Scraping data from the web
 '''
@@ -68,12 +68,13 @@ def process(job_type:str, url:str|list) -> pd.DataFrame:
         loader.requests_kwargs = {"verify":False}
         data = loader.load()
         cleaned_list = list()
-        for idx in range(1, len(data[0].page_content)):
-            if data[0].page_content[idx] != '\n' and data[0].page_content[idx-1] != '\n':
-                cleaned_list.append(data[0].page_content[idx])
-            elif data[0].page_content[idx] != '\n' and data[0].page_content[idx-1] == '\n':
-                cleaned_list.append('\n')
-                cleaned_list.append(data[0].page_content[idx])
+        for data_idx in range(len(data)):
+            for idx in range(1, len(data[data_idx].page_content)):
+                if data[0].page_content[idx] != '\n' and data[data_idx].page_content[idx-1] != '\n':
+                    cleaned_list.append(data[data_idx].page_content[idx])
+                elif data[0].page_content[idx] != '\n' and data[data_idx].page_content[idx-1] == '\n':
+                    cleaned_list.append('\n')
+                    cleaned_list.append(data[data_idx].page_content[idx])
         cleaned_list = "".join(cleaned_list).split("\n")
         df = pd.DataFrame({'content':cleaned_list})
         return df
