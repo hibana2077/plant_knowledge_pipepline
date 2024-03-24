@@ -2,7 +2,7 @@
 Author: hibana2077 hibana2077@gmail.com
 Date: 2024-03-03 19:29:24
 LastEditors: hibana2077 hibana2077@gmail.com
-LastEditTime: 2024-03-24 14:06:32
+LastEditTime: 2024-03-24 16:14:00
 FilePath: \plant_knowledge_pipepline\src\data_collection_node\main.py
 Description: Scraping data from the web
 '''
@@ -36,14 +36,6 @@ logger = logging.getLogger(__name__)
 simplefilter(action="ignore", category=FutureWarning)
 simplefilter(action="ignore", category=InsecureRequestWarning)
 
-# loader = WebBaseLoader("https://iastate.pressbooks.pub/quantitativegenetics/")
-# loader.requests_kwargs = {"verify":False}
-
-# data = loader.load()
-
-# print(len(data))
-# pprint(data[0].page_content)
-
 # job structure
 # {
 #     "job_id": "123",
@@ -66,6 +58,9 @@ if __name__ == "__main__":
     logger.info("Config:")
     logger.info(f"REDIS_HOST: {REDIS_HOST}")
     logger.info(f"REDIS_PORT: {REDIS_PORT}")
+    logger.info(f"HEARTBEAT_INTERVAL: {heartbeat_interval}")
+    logger.info(f"HDFS_HOST: {HDFS_HOST}")
+    logger.info(f"HDFS_PORT: {HDFS_PORT}")
     heartbeat_reg = time.time()
     while True:
         try:
