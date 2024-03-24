@@ -2,7 +2,7 @@
 Author: hibana2077 hibana2077@gmail.com
 Date: 2024-03-03 19:29:24
 LastEditors: hibana2077 hibana2077@gmail.com
-LastEditTime: 2024-03-23 20:45:47
+LastEditTime: 2024-03-24 14:06:32
 FilePath: \plant_knowledge_pipepline\src\data_collection_node\main.py
 Description: Scraping data from the web
 '''
@@ -15,6 +15,7 @@ from langchain_community.document_loaders import WebBaseLoader
 from pprint import pprint
 from warnings import simplefilter
 from urllib3.exceptions import InsecureRequestWarning
+from pyarrow import fs
 
 # Basic config
 heartbeat_interval = os.getenv("HEARTBEAT_INTERVAL", 60)
@@ -25,6 +26,7 @@ REDIS_PORT = os.getenv("REDIS_PORT", 6379)
 
 # HDFS config
 HDFS_HOST = os.getenv("HDFS_HOST", "localhost")
+HDFS_PORT = os.getenv("HDFS_PORT", 9870)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
