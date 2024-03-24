@@ -1,4 +1,4 @@
 redis
-libhdfs3
-hdfs
 langchain
+pyarrow
+pandas
