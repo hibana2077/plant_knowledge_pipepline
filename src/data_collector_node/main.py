@@ -2,7 +2,7 @@
 Author: hibana2077 hibana2077@gmail.com
 Date: 2024-03-03 19:29:24
 LastEditors: hibana2077 hibana2077@gmail.com
-LastEditTime: 2024-03-24 17:20:19
+LastEditTime: 2024-03-24 19:40:11
 FilePath: \plant_knowledge_pipepline\src\data_collection_node\main.py
 Description: Scraping data from the web
 '''
@@ -87,12 +87,14 @@ if __name__ == "__main__":
     logger.info(f"HEARTBEAT_INTERVAL: {heartbeat_interval}")
     logger.info(f"HDFS_HOST: {HDFS_HOST}")
     logger.info(f"HDFS_PORT: {HDFS_PORT}")
+    fs_client = pa.hdfs.connect(HDFS_HOST, HDFS_PORT)
+    # Creat directory if not exists (HDFS)
+    fs_client.create_dir("/data/textract")
     heartbeat_reg = time.time()
     while True:
         try:
             # Connect to redis
             client = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=0)
-            fs_client = fs.HadoopFileSystem(HDFS_HOST, HDFS_PORT)
             # Check for new Jobs
             job = client.blpop("data_collection_opens_jobs", 10)
             if job != None:
@@ -102,9 +104,17 @@ if __name__ == "__main__":
                 job_type = job["job_type"]
                 url = job["url"]
                 df = process(job_type, url)
-
-
-            
+                # Save data to HDFS
+                file_name = f"/data/textract/{job['job_id']}.parquet"
+                with fs_client.open(file_name, 'wb') as f:
+                    parquet.write_table(pa.Table.from_pandas(df), f)
+                # Save metadata to redis
+                client.hset("data_collection_metadata", job["job_id"], json.dumps({"file_name":file_name}))
+                logger.info(f"Job {job['job_id']} completed")
+                # Send heartbeat
+                heartbeat_reg = time.time() if time.time() - heartbeat_reg > heartbeat_interval else heartbeat_reg
+            else:
+                logger.info("No jobs available")
         except KeyboardInterrupt:
             logger.info("Data collection node shutting down")
             break
