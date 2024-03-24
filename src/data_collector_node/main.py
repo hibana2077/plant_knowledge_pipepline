@@ -2,7 +2,7 @@
 Author: hibana2077 hibana2077@gmail.com
 Date: 2024-03-03 19:29:24
 LastEditors: hibana2077 hibana2077@gmail.com
-LastEditTime: 2024-03-24 16:14:00
+LastEditTime: 2024-03-24 17:18:32
 FilePath: \plant_knowledge_pipepline\src\data_collection_node\main.py
 Description: Scraping data from the web
 '''
@@ -11,6 +11,9 @@ import os
 import logging
 import time
 import json
+import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as parquet
 from langchain_community.document_loaders import WebBaseLoader
 from pprint import pprint
 from warnings import simplefilter
@@ -40,18 +43,40 @@ simplefilter(action="ignore", category=InsecureRequestWarning)
 # {
 #     "job_id": "123",
 #     "job_type": "single_page", # single_page, multi_page, sitemap
-#     "url": "https://iastate.pressbooks.pub/quantitativegenetics/",
-#     "allowed_url_patterns": ["https://iastate.pressbooks.pub/quantitativegenetics/"],
+#     "url": "https://iastate.pressbooks.pub/quantitativegenetics/", # url or list of urls
 #     "timestamp": "2024-03-03 19:29:24",
 # }
 
-def process(job_type:str, url:str, allowed_url_patterns:list):
+def process(job_type:str, url:str|list) -> pd.DataFrame:
     if job_type == "single_page":
         loader = WebBaseLoader(url)
         loader.requests_kwargs = {"verify":False}
         data = loader.load()
-        print(len(data))
-        pprint(data[0].page_content)
+        cleaned_list = list()
+        for idx in range(1, len(data[0].page_content)):
+            if data[0].page_content[idx] != '\n' and data[0].page_content[idx-1] != '\n':
+                cleaned_list.append(data[0].page_content[idx])
+            elif data[0].page_content[idx] != '\n' and data[0].page_content[idx-1] == '\n':
+                cleaned_list.append('\n')
+                cleaned_list.append(data[0].page_content[idx])
+        cleaned_list = "".join(cleaned_list).split("\n")
+        df = pd.DataFrame({'content':cleaned_list})
+        return df
+    
+    elif job_type == "multi_page":
+        loader = WebBaseLoader(url)
+        loader.requests_kwargs = {"verify":False}
+        data = loader.load()
+        cleaned_list = list()
+        for idx in range(1, len(data[0].page_content)):
+            if data[0].page_content[idx] != '\n' and data[0].page_content[idx-1] != '\n':
+                cleaned_list.append(data[0].page_content[idx])
+            elif data[0].page_content[idx] != '\n' and data[0].page_content[idx-1] == '\n':
+                cleaned_list.append('\n')
+                cleaned_list.append(data[0].page_content[idx])
+        cleaned_list = "".join(cleaned_list).split("\n")
+        df = pd.DataFrame({'content':cleaned_list})
+        return df
         
 if __name__ == "__main__":
     logger.info("Data collection node active")
@@ -66,6 +91,7 @@ if __name__ == "__main__":
         try:
             # Connect to redis
             client = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=0)
+            fs_client = fs.HadoopFileSystem(HDFS_HOST, HDFS_PORT)
             # Check for new Jobs
             job = client.blpop("data_collection_opens_jobs", 10)
             if job != None:
@@ -74,8 +100,9 @@ if __name__ == "__main__":
                 # get job type
                 job_type = job["job_type"]
                 url = job["url"]
-                allowed_url_patterns = job["allowed_url_patterns"]
-                process(job_type, url, allowed_url_patterns)
+                df = process(job_type, url)
+
+
             
         except KeyboardInterrupt:
             logger.info("Data collection node shutting down")
