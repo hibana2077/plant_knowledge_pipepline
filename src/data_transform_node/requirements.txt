@@ -2,4 +2,5 @@ langchain
 neo4j
 tiktoken
 langchain-groq
+pymupdf
 arxiv

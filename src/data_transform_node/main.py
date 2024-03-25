@@ -2,7 +2,7 @@
 Author: hibana2077 hibana2077@gmail.com
 Date: 2024-03-07 19:42:28
 LastEditors: hibana2077 hibana2077@gmail.com
-LastEditTime: 2024-03-25 18:18:35
+LastEditTime: 2024-03-25 19:35:19
 FilePath: \plant_knowledge_pipepline\src\data_transform_node\main.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -21,6 +21,9 @@ from typing import List, Dict, Any, Optional
 from langchain.pydantic_v1 import Field, BaseModel
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_community.graphs.neo4j_graph import Neo4jGraph
+import ssl
+
+ssl._create_default_https_context = ssl._create_unverified_context
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY","") # allow multiple keys -> key1,key2,key3 -> split(",") -> ["key1", "key2", "key3"]
 GROQ_API_KEY_LIST = GROQ_API_KEY.split(",") if GROQ_API_KEY else []
@@ -78,23 +81,23 @@ def props_to_dict(props) -> dict:
     if not props:
       return properties
     for p in props:
-        properties[format_property_key(p.key)] = p.value
+        properties[format_property_key(p['key'])] = p['value']
     return properties
 
 def map_to_base_node(node: Node) -> BaseNode:
     """Map the KnowledgeGraph Node to the base Node."""
-    properties = props_to_dict(node.properties) if node.properties else {}
+    properties = props_to_dict(node['properties']) if type(node) == dict and node['properties'] else {}
     # Add name property for better Cypher statement generation
-    properties["name"] = node.id.title()
+    properties["name"] = node['id'].title() if type(node) == dict and node['id'] else ""
     return BaseNode(
-        id=node.id.title(), type=node.type.capitalize(), properties=properties
+        id=node['id'].title(), type=node["type"].capitalize(), properties=properties
     )
 
 def map_to_base_relationship(rel: Relationship) -> BaseRelationship:
     """Map the KnowledgeGraph Relationship to the base Relationship."""
-    source = map_to_base_node(rel.source)
-    target = map_to_base_node(rel.target)
-    properties = props_to_dict(rel.properties) if rel.properties else {}
+    source = map_to_base_node(rel["source"])
+    target = map_to_base_node(rel["target"])
+    properties = props_to_dict(rel["properties"]) if rel["properties"] else {}
     return BaseRelationship(
         source=source, target=target, type=rel.type, properties=properties
     )
@@ -135,6 +138,7 @@ def get_extraction_chain(
         input_variables=["query"],
         partial_variables={"format_instructions": parser.get_format_instructions()},
     )
+    print(prompt)
     chain = prompt | llm | parser
     return chain
 
@@ -145,17 +149,18 @@ def extract_and_store_graph(
     extract_chain = get_extraction_chain(nodes, rels)
     print("invoke extract_chain")
     data = extract_chain.invoke({"query": document.page_content})
-    # # Construct a graph document
+    print(data.keys())
+    # Construct a graph document
     graph_document = GraphDocument(
-      nodes = [map_to_base_node(node) for node in data.nodes],
-      relationships = [map_to_base_relationship(rel) for rel in data.rels],
+      nodes = [map_to_base_node(node) for node in data['nodes']],
+      relationships = [map_to_base_relationship(rel) for rel in data['rels']],
       source = document
     )
     # graph.add_graph_documents([graph_document])
     return graph_document
 
 # Read the wikipedia article
-raw_documents = ArxivLoader(query="2403.03410", load_max_docs=2).load()
+raw_documents = ArxivLoader(query="1605.08386", load_max_docs=2).load()
 # Define chunking strategy
 text_splitter = TokenTextSplitter(chunk_size=2048, chunk_overlap=24)
 # Only take the first the raw_documents
