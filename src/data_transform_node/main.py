@@ -6,7 +6,6 @@ LastEditTime: 2024-03-25 12:43:22
 FilePath: \plant_knowledge_pipepline\src\data_transform_node\main.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
-from tqdm import tqdm
 from langchain_groq import ChatGroq
 from langchain_community.document_loaders import ArxivLoader
 from langchain.text_splitter import TokenTextSplitter
@@ -22,7 +21,6 @@ from typing import List, Dict, Any, Optional
 from langchain.pydantic_v1 import Field, BaseModel
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_community.graphs.neo4j_graph import Neo4jGraph
-from pprint import pprint
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY") # allow multiple keys -> key1,key2,key3 -> split(",") -> ["key1", "key2", "key3"]
 GROQ_API_KEY_LIST = GROQ_API_KEY.split(",") if GROQ_API_KEY else []
