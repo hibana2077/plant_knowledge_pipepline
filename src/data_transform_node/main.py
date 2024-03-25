@@ -2,7 +2,7 @@
 Author: hibana2077 hibana2077@gmail.com
 Date: 2024-03-07 19:42:28
 LastEditors: hibana2077 hibana2077@gmail.com
-LastEditTime: 2024-03-25 12:43:22
+LastEditTime: 2024-03-25 18:18:35
 FilePath: \plant_knowledge_pipepline\src\data_transform_node\main.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -22,13 +22,15 @@ from langchain.pydantic_v1 import Field, BaseModel
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_community.graphs.neo4j_graph import Neo4jGraph
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY") # allow multiple keys -> key1,key2,key3 -> split(",") -> ["key1", "key2", "key3"]
+GROQ_API_KEY = os.getenv("GROQ_API_KEY","") # allow multiple keys -> key1,key2,key3 -> split(",") -> ["key1", "key2", "key3"]
 GROQ_API_KEY_LIST = GROQ_API_KEY.split(",") if GROQ_API_KEY else []
-NEO4J_URL = os.getenv("NEO4J_URL")
-NEO4J_USERNAME = os.getenv("NEO4J_USERNAME")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
+NEO4J_URL = os.getenv("NEO4J_URL", "bolt://localhost:7687")
+NEO4J_USERNAME = os.getenv("NEO4J_USERNAME", "neo4j")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "plant_knowledge")
 
-llm = ChatGroq(temperature=0, groq_api_key="", model_name="mixtral-8x7b-32768")
+if not GROQ_API_KEY_LIST:raise ValueError("GROQ_API_KEY is required")
+os.environ["GROQ_API_KEY"] = GROQ_API_KEY_LIST[0]
+llm = ChatGroq(temperature=0, api_key=GROQ_API_KEY_LIST[0],model_name="mixtral-8x7b-32768")
 
 graph = Neo4jGraph(
     url=NEO4J_URL,

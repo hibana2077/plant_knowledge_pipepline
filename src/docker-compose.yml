@@ -52,9 +52,7 @@ services:
       - "7474:7474"
       - "7687:7687"
     environment:
-      NEO4J_AUTH: neo4j/test
-      NEO4J_dbms_memory_pagecache_size: 1G
-      NEO4J_dbms_memory_heap_maxSize: 1G
+      NEO4J_AUTH: neo4j/plant_knowledge
       NEO4J_apoc_export_file_enabled: true
       NEO4J_apoc_import_file_enabled: true
       NEO4J_apoc_import_file_use__neo4j__config: true

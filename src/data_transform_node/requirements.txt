@@ -1,8 +1,5 @@
 langchain
 neo4j
-openai
 tiktoken
-langchain_openai
-huggingface_hub
-transformers
 langchain-groq
+arxiv
