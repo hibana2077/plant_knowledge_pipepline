@@ -21,9 +21,25 @@ from langchain.schema import Document
 from typing import List, Dict, Any, Optional
 from langchain.pydantic_v1 import Field, BaseModel
 from langchain_core.output_parsers import JsonOutputParser
+from langchain_community.graphs.neo4j_graph import Neo4jGraph
 from pprint import pprint
 
+GROQ_API_KEY = os.getenv("GROQ_API_KEY") # allow multiple keys -> key1,key2,key3 -> split(",") -> ["key1", "key2", "key3"]
+GROQ_API_KEY_LIST = GROQ_API_KEY.split(",") if GROQ_API_KEY else []
+NEO4J_URL = os.getenv("NEO4J_URL")
+NEO4J_USERNAME = os.getenv("NEO4J_USERNAME")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
+
 llm = ChatGroq(temperature=0, groq_api_key="", model_name="mixtral-8x7b-32768")
+
+url = "bolt://172.104.170.211:7687"
+username ="neo4j"
+password = "waiter-correct-image-lunch-lobster-9276"
+graph = Neo4jGraph(
+    url=url,
+    username=username,
+    password=password
+)
 
 # Define KnowledgeGraph data structure
 
@@ -138,6 +154,7 @@ def extract_and_store_graph(
       relationships = [map_to_base_relationship(rel) for rel in data.rels],
       source = document
     )
+    # graph.add_graph_documents([graph_document])
     return graph_document
 
 # Read the wikipedia article
