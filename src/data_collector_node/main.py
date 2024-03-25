@@ -2,7 +2,7 @@
 Author: hibana2077 hibana2077@gmail.com
 Date: 2024-03-03 19:29:24
 LastEditors: hibana2077 hibana2077@gmail.com
-LastEditTime: 2024-03-24 19:40:11
+LastEditTime: 2024-03-25 08:56:38
 FilePath: \plant_knowledge_pipepline\src\data_collection_node\main.py
 Description: Scraping data from the web
 '''
@@ -15,10 +15,8 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as parquet
 from langchain_community.document_loaders import WebBaseLoader
-from pprint import pprint
 from warnings import simplefilter
 from urllib3.exceptions import InsecureRequestWarning
-from pyarrow import fs
 
 # Basic config
 heartbeat_interval = os.getenv("HEARTBEAT_INTERVAL", 60)
