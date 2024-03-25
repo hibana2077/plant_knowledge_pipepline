@@ -2,7 +2,7 @@
 Author: hibana2077 hibana2077@gmail.com
 Date: 2024-03-07 19:42:28
 LastEditors: hibana2077 hibana2077@gmail.com
-LastEditTime: 2024-03-12 09:22:16
+LastEditTime: 2024-03-25 12:43:22
 FilePath: \plant_knowledge_pipepline\src\data_transform_node\main.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -32,13 +32,10 @@ NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
 llm = ChatGroq(temperature=0, groq_api_key="", model_name="mixtral-8x7b-32768")
 
-url = "bolt://172.104.170.211:7687"
-username ="neo4j"
-password = "waiter-correct-image-lunch-lobster-9276"
 graph = Neo4jGraph(
-    url=url,
-    username=username,
-    password=password
+    url=NEO4J_URL,
+    username=NEO4J_USERNAME,
+    password=NEO4J_PASSWORD,
 )
 
 # Define KnowledgeGraph data structure
