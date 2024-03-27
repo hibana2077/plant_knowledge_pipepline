@@ -1,13 +1,13 @@
 '''
 Author: hibana2077 hibana2077@gmail.com
 Date: 2024-03-07 19:42:28
-LastEditors: hibana2077 hibana2077@gmaill.com
-LastEditTime: 2024-03-27 19:56:03
+LastEditors: hibana2077 hibana2077@gmail.com
+LastEditTime: 2024-03-27 22:15:33
 FilePath: \plant_knowledge_pipepline\src\data_transform_node\main.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
 from langchain_groq import ChatGroq
-from langchain_community.document_loaders import ArxivLoader
+from langchain_community.document_loaders import WikipediaLoader
 from langchain.text_splitter import TokenTextSplitter
 from langchain_core.messages.ai import AIMessage
 from langchain_community.graphs.graph_document import (
@@ -22,6 +22,7 @@ from typing import List, Dict, Any, Optional
 from langchain.pydantic_v1 import Field, BaseModel
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_community.graphs.neo4j_graph import Neo4jGraph
+from langchain_core.exceptions import OutputParserException
 import ssl
 
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -95,16 +96,23 @@ def map_to_base_node(node: Node) -> BaseNode:
     properties = props_to_dict(node['properties']) if type(node) == dict and 'properties' in node.keys() else {}
     # Add name property for better Cypher statement generation
     properties["name"] = node['id'].title() if type(node) == dict and node['id'] else ""
-    return BaseNode(
-        id=node['id'].title(), type=node["type"].capitalize(), properties=properties
-    ) if type(node) == dict else BaseNode(
-        id=node, type="Node", properties=properties
-    )
+    try:
+        return BaseNode(
+            id=node['id'].title(), type=node["type"].capitalize(), properties=properties
+        )
+    except AttributeError:
+        return BaseNode(
+            id=node, type="Node", properties=properties
+        )
+    except TypeError:
+        return BaseNode(
+            id=node, type="Node", properties=properties
+        )
 
 def map_to_base_relationship(rel: Relationship) -> BaseRelationship:
     """Map the KnowledgeGraph Relationship to the base Relationship."""
     print("map to base rel:",rel, type(rel), "\t\n")
-    print(f"Rel.type: {rel['type']}")
+    # print(f"Rel.type: {rel['type']}")
     source = map_to_base_node(rel["source"])
     target = map_to_base_node(rel["target"])
     properties = props_to_dict(rel["properties"]) if "properties" in rel.keys() else {}
@@ -144,8 +152,13 @@ def get_extraction_chain(
     Remember, the knowledge graph should be coherent and easily understandable, so maintaining consistency in entity references is crucial.
     ## 5. Strict Compliance
     Adhere to the rules strictly. Non-compliance will result in termination.
-    ## 6. Format Instructions
-    - **Format**: The output should be in JSON format.(No need to use ```json``` in the output).
+    ## 6. Forbidden Formats
+    - **No HTML**: Do not include HTML tags in the nodes or relationships.
+    - **No Markdown**: Do not include markdown syntax in the nodes or relationships.
+    - **No Skip**: Do not skip any part of the text. Extract all relevant information.
+    - **Invalid json output**: Do not provide invalid json output.
+    ## 7. Additional Guidelines
+    - **Start Formatting**: Start with "{", end with "}".
     """
     parser = JsonOutputParser(pydantic_object=KnowledgeGraph)
     prompt = PromptTemplate(
@@ -164,7 +177,18 @@ def extract_and_store_graph(
     print("invoke extract_chain")
     data:AIMessage = extract_chain.invoke({"query": document.page_content})
     data:str = data.content
-    data = parser.parse(data)
+    try:
+        data = parser.parse(data)
+    except OutputParserException:
+        # use llm to make data structure more clear
+        new_prompt = PromptTemplate(
+            template="Organize the input text into the correct json format. \n{data}\n",
+            input_variables=["data"],
+        )
+        new_chain = new_prompt | llm | parser
+        data:AIMessage = new_chain.invoke({"data": data})
+        data:str = data.content
+        data = parser.parse(data)
     print("\n\n")
     # Construct a graph document
     graph_document = GraphDocument(
@@ -176,7 +200,7 @@ def extract_and_store_graph(
     return graph_document
 
 # Read the wikipedia article
-raw_documents = ArxivLoader(query="1605.08386", load_max_docs=2).load()
+raw_documents = WikipediaLoader(query="Huntington's disease").load()
 # Define chunking strategy
 text_splitter = TokenTextSplitter(chunk_size=2048, chunk_overlap=24)
 # Only take the first the raw_documents
