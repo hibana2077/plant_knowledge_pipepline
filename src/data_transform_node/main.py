@@ -1,14 +1,15 @@
 '''
 Author: hibana2077 hibana2077@gmail.com
 Date: 2024-03-07 19:42:28
-LastEditors: hibana2077 hibana2077@gmail.com
-LastEditTime: 2024-03-25 19:35:19
+LastEditors: hibana2077 hibana2077@gmaill.com
+LastEditTime: 2024-03-27 19:56:03
 FilePath: \plant_knowledge_pipepline\src\data_transform_node\main.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
 from langchain_groq import ChatGroq
 from langchain_community.document_loaders import ArxivLoader
 from langchain.text_splitter import TokenTextSplitter
+from langchain_core.messages.ai import AIMessage
 from langchain_community.graphs.graph_document import (
     Node as BaseNode,
     Relationship as BaseRelationship,
@@ -27,7 +28,7 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY","") # allow multiple keys -> key1,key2,key3 -> split(",") -> ["key1", "key2", "key3"]
 GROQ_API_KEY_LIST = GROQ_API_KEY.split(",") if GROQ_API_KEY else []
-NEO4J_URL = os.getenv("NEO4J_URL", "bolt://localhost:7687")
+NEO4J_URL = os.getenv("NEO4J_URL", "bolt://210.240.160.212:7687") #note: use bolt protocol
 NEO4J_USERNAME = os.getenv("NEO4J_USERNAME", "neo4j")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "plant_knowledge")
 
@@ -80,27 +81,41 @@ def props_to_dict(props) -> dict:
     properties = {}
     if not props:
       return properties
+    if type(props) == dict and props:
+        for k, v in props.items():
+            properties[format_property_key(k)] = v
+        return properties
     for p in props:
         properties[format_property_key(p['key'])] = p['value']
     return properties
 
 def map_to_base_node(node: Node) -> BaseNode:
     """Map the KnowledgeGraph Node to the base Node."""
-    properties = props_to_dict(node['properties']) if type(node) == dict and node['properties'] else {}
+    print(f"Node: {node} \t\n")
+    properties = props_to_dict(node['properties']) if type(node) == dict and 'properties' in node.keys() else {}
     # Add name property for better Cypher statement generation
     properties["name"] = node['id'].title() if type(node) == dict and node['id'] else ""
     return BaseNode(
         id=node['id'].title(), type=node["type"].capitalize(), properties=properties
+    ) if type(node) == dict else BaseNode(
+        id=node, type="Node", properties=properties
     )
 
 def map_to_base_relationship(rel: Relationship) -> BaseRelationship:
     """Map the KnowledgeGraph Relationship to the base Relationship."""
+    print("map to base rel:",rel, type(rel), "\t\n")
+    print(f"Rel.type: {rel['type']}")
     source = map_to_base_node(rel["source"])
     target = map_to_base_node(rel["target"])
-    properties = props_to_dict(rel["properties"]) if rel["properties"] else {}
-    return BaseRelationship(
-        source=source, target=target, type=rel.type, properties=properties
-    )
+    properties = props_to_dict(rel["properties"]) if "properties" in rel.keys() else {}
+    try:
+        return BaseRelationship(
+            source=source, target=target, type=rel.type, properties=properties
+        )
+    except AttributeError:
+        return BaseRelationship(
+            source=source, target=target, type=rel["type"], properties=properties
+        )
 
 def get_extraction_chain(
     allowed_nodes: Optional[List[str]] = None,
@@ -130,7 +145,7 @@ def get_extraction_chain(
     ## 5. Strict Compliance
     Adhere to the rules strictly. Non-compliance will result in termination.
     ## 6. Format Instructions
-    - **Format**: The output should be in JSON format.(No need to use ```json``` in the output)
+    - **Format**: The output should be in JSON format.(No need to use ```json``` in the output).
     """
     parser = JsonOutputParser(pydantic_object=KnowledgeGraph)
     prompt = PromptTemplate(
@@ -138,18 +153,19 @@ def get_extraction_chain(
         input_variables=["query"],
         partial_variables={"format_instructions": parser.get_format_instructions()},
     )
-    print(prompt)
-    chain = prompt | llm | parser
-    return chain
+    chain = prompt | llm
+    return chain, parser
 
 def extract_and_store_graph(
     document: Document,
     nodes:Optional[List[str]] = None,
     rels:Optional[List[str]]=None) -> None:
-    extract_chain = get_extraction_chain(nodes, rels)
+    extract_chain,parser = get_extraction_chain(nodes, rels)
     print("invoke extract_chain")
-    data = extract_chain.invoke({"query": document.page_content})
-    print(data.keys())
+    data:AIMessage = extract_chain.invoke({"query": document.page_content})
+    data:str = data.content
+    data = parser.parse(data)
+    print("\n\n")
     # Construct a graph document
     graph_document = GraphDocument(
       nodes = [map_to_base_node(node) for node in data['nodes']],
@@ -166,6 +182,9 @@ text_splitter = TokenTextSplitter(chunk_size=2048, chunk_overlap=24)
 # Only take the first the raw_documents
 documents:list[Document] = text_splitter.split_documents(raw_documents[:3])
 # print(documents[0].page_content)
+import time
 for i, d in enumerate(documents):
+    s = time.time()
     print(f"Processing document {i+1}/{len(documents)}")
     extract_and_store_graph(d)
+    print(f"Time taken: {time.time()-s:.2f} seconds")
