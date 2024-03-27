@@ -21,12 +21,12 @@ from pprint import pprint
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from time import time
 
-hf_model = HuggingFacePipeline.from_model_id(
-    model_id="abacaj/phi-2-super",
-    task="text-generation",
-    device=0,  # replace with device_map="auto" to use the accelerate library.
-    pipeline_kwargs={"max_new_tokens": 2000}
-)
+# hf_model = HuggingFacePipeline.from_model_id(
+#     model_id="abacaj/phi-2-super",
+#     task="text-generation",
+#     device=0,  # replace with device_map="auto" to use the accelerate library.
+#     pipeline_kwargs={"max_new_tokens": 2000}
+# )
 
 model = ChatGroq(temperature=0, groq_api_key="", model_name="mixtral-8x7b-32768")
 model2 = ChatOpenAI(temperature=0, openai_api_key="", model_name="gpt-3.5-turbo-16k")
@@ -68,13 +68,13 @@ prompt = PromptTemplate(
 
 chain = prompt | model | parser
 chain2 = prompt | model2 | parser
-chain3 = prompt | hf_model | parser
+# chain3 = prompt | hf_model | parser
 
 print(f"Groq(mistral) output:")
 pprint(chain.invoke({"query": query}))
 print(f"Open AI(gpt-3.5-turbo-16k) output:")
 pprint(chain2.invoke({"query": query}))
-print(f"{hf_model.model_id} output:")
-s = time()
-pprint(chain3.invoke({"query": query}))
-print(f"Time taken: {time() - s}")
+# print(f"{hf_model.model_id} output:")
+# s = time()
+# pprint(chain3.invoke({"query": query}))
+# print(f"Time taken: {time() - s}")
