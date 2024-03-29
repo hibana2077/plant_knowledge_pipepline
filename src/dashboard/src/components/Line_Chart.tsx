@@ -2,13 +2,14 @@
  * @Author: hibana2077 hibana2077@gmail.com
  * @Date: 2024-03-29 22:05:55
  * @LastEditors: hibana2077 hibana2077@gmail.com
- * @LastEditTime: 2024-03-29 22:29:13
+ * @LastEditTime: 2024-03-29 22:32:22
  * @FilePath: \plant_knowledge_pipepline\src\dashboard\src\components\Line_Chart.tsx
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 import { LineChart } from '@tremor/react';
 
 // need to connect to database to get the data
+// ['Scheduled']
 
 const chartdata = [
   {
