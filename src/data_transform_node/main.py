@@ -2,7 +2,7 @@
 Author: hibana2077 hibana2077@gmail.com
 Date: 2024-03-07 19:42:28
 LastEditors: hibana2077 hibana2077@gmail.com
-LastEditTime: 2024-03-27 22:15:33
+LastEditTime: 2024-03-29 21:56:38
 FilePath: \plant_knowledge_pipepline\src\data_transform_node\main.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
@@ -200,12 +200,11 @@ def extract_and_store_graph(
     return graph_document
 
 # Read the wikipedia article
-raw_documents = WikipediaLoader(query="Huntington's disease").load()
+raw_documents = WikipediaLoader(query="Apple inc").load()
 # Define chunking strategy
 text_splitter = TokenTextSplitter(chunk_size=2048, chunk_overlap=24)
 # Only take the first the raw_documents
 documents:list[Document] = text_splitter.split_documents(raw_documents[:3])
-# print(documents[0].page_content)
 import time
 for i, d in enumerate(documents):
     s = time.time()
