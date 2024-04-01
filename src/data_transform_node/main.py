@@ -1,5 +1,6 @@
 from langchain_groq import ChatGroq
-from langchain_community.document_loaders import WikipediaLoader
+from langchain_openai import ChatOpenAI
+from langchain_community.document_loaders import WebBaseLoader
 from langchain.text_splitter import TokenTextSplitter
 from langchain_core.messages.ai import AIMessage
 from langchain_community.graphs.graph_document import (
@@ -16,18 +17,22 @@ from langchain_core.output_parsers import JsonOutputParser
 from langchain_community.graphs.neo4j_graph import Neo4jGraph
 from langchain_core.exceptions import OutputParserException
 import ssl
+import time
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY","") # allow multiple keys -> key1,key2,key3 -> split(",") -> ["key1", "key2", "key3"]
-GROQ_API_KEY_LIST = GROQ_API_KEY.split(",") if GROQ_API_KEY else []
-NEO4J_URL = os.getenv("NEO4J_URL", "bolt://210.240.160.212:7687") #note: use bolt protocol
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY","") # allow multiple keys -> key1,key2,key3 -> split(",") -> ["key1", "key2", "key3"]
+GROQ_API_KEY_LIST = GROQ_API_KEY.split(",") if GROQ_API_KEY == "" else []
+OPENAI_API_KEY_LIST = OPENAI_API_KEY.split(",") if OPENAI_API_KEY == "" else []
+NEO4J_URL = os.getenv("NEO4J_URL", "bolt://localhost:7687") #note: use bolt protocol
 NEO4J_USERNAME = os.getenv("NEO4J_USERNAME", "neo4j")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "plant_knowledge")
 
 if not GROQ_API_KEY_LIST:raise ValueError("GROQ_API_KEY is required")
-os.environ["GROQ_API_KEY"] = GROQ_API_KEY_LIST[0]
+if not OPENAI_API_KEY_LIST:raise ValueError("OPENAI_API_KEY is required")
 llm = ChatGroq(temperature=0, api_key=GROQ_API_KEY_LIST[0],model_name="mixtral-8x7b-32768")
+openai_llm = ChatOpenAI(temperature=0, api_key=OPENAI_API_KEY_LIST[0], model_name="gpt-4-0125-preview")
 
 graph = Neo4jGraph(
     url=NEO4J_URL,
@@ -84,14 +89,23 @@ def props_to_dict(props) -> dict:
 
 def map_to_base_node(node: Node) -> BaseNode:
     """Map the KnowledgeGraph Node to the base Node."""
-    print(f"Node: {node} \t\n")
-    properties = props_to_dict(node['properties']) if type(node) == dict and 'properties' in node.keys() else {}
+    print(f"Node{type(node)}: {node} \t\n")
+    properties = props_to_dict(node['properties']) if type(node) == dict and 'properties' in node.keys() else props_to_dict(node.properties) if type(node) != str and type(node) != dict else {}
     # Add name property for better Cypher statement generation
-    properties["name"] = node['id'].title() if type(node) == dict and node['id'] else ""
+    properties["name"] = node['id'].title() if type(node) == dict and node['id'] else node.id.title() if type(node) != str and type(node) != dict else node.title()
     try:
-        return BaseNode(
-            id=node['id'].title(), type=node["type"].capitalize(), properties=properties
-        )
+        if type(node) == dict:
+            return BaseNode(
+                id=node['id'].title(), type=node["type"].capitalize(), properties=properties
+            )
+        elif type(node) == str:
+            return BaseNode(
+                id=node.title(), type="Node", properties=properties
+            )
+        else:
+            return BaseNode(
+                id=node.id.title(), type=node.type.capitalize(), properties=properties
+            )
     except AttributeError:
         return BaseNode(
             id=node, type="Node", properties=properties
@@ -101,18 +115,22 @@ def map_to_base_node(node: Node) -> BaseNode:
             id=node, type="Node", properties=properties
         )
 
-def map_to_base_relationship(rel: Relationship) -> BaseRelationship:
+def map_to_base_relationship(rel: Relationship,base_nodes:List[BaseNode]) -> BaseRelationship:
     """Map the KnowledgeGraph Relationship to the base Relationship."""
     print("map to base rel:",rel, type(rel), "\t\n")
     # print(f"Rel.type: {rel['type']}")
-    source = map_to_base_node(rel["source"])
-    target = map_to_base_node(rel["target"])
+    source_node = next((node for node in base_nodes if node.id == rel["source"]), rel["source"])
+    target_node = next((node for node in base_nodes if node.id == rel["target"]), rel["target"])
+    source = map_to_base_node(source_node)
+    target = map_to_base_node(target_node)
     properties = props_to_dict(rel["properties"]) if "properties" in rel.keys() else {}
+    if rel["type"] == None:rel["type"] = "Relationship"
     try:
         return BaseRelationship(
             source=source, target=target, type=rel.type, properties=properties
         )
     except AttributeError:
+        
         return BaseRelationship(
             source=source, target=target, type=rel["type"], properties=properties
         )
@@ -123,35 +141,44 @@ def get_extraction_chain(
     ):
     # Rule
     RULE = f"""# Knowledge Graph Instructions for Language Model
-    ## 1. Overview
-    You are a top-tier algorithm designed for extracting information in structured formats to build a knowledge graph.
-    - **Nodes** represent entities and concepts. They're akin to Wikipedia nodes.
-    - The aim is to achieve simplicity and clarity in the knowledge graph, making it accessible for a vast audience.
-    ## 2. Labeling Nodes
-    - **Consistency**: Ensure you use basic or elementary types for node labels.
-    - For example, when you identify an entity representing a person, always label it as **"person"**. Avoid using more specific terms like "mathematician" or "scientist".
-    - **Node IDs**: Never utilize integers as node IDs. Node IDs should be names or human-readable identifiers found in the text.
-    ## 3. Handling Numerical Data and Dates
-    - Numerical data, like age or other related information, should be incorporated as attributes or properties of the respective nodes.
-    - **No Separate Nodes for Dates/Numbers**: Do not create separate nodes for dates or numerical values. Always attach them as attributes or properties of nodes.
-    - **Property Format**: Properties must be in a key-value format.
-    - **Quotation Marks**: Never use escaped single or double quotes within property values.
-    - **Naming Convention**: Use camelCase for property keys, e.g., `birthDate`.
-    ## 4. Coreference Resolution
-    - **Maintain Entity Consistency**: When extracting entities, it's vital to ensure consistency.
-    If an entity, such as "John Doe", is mentioned multiple times in the text but is referred to by different names or pronouns (e.g., "Joe", "he"),
-    always use the most complete identifier for that entity throughout the knowledge graph. In this example, use "John Doe" as the entity ID.
-    Remember, the knowledge graph should be coherent and easily understandable, so maintaining consistency in entity references is crucial.
-    ## 5. Strict Compliance
-    Adhere to the rules strictly. Non-compliance will result in termination.
-    ## 6. Forbidden Formats
-    - **No HTML**: Do not include HTML tags in the nodes or relationships.
-    - **No Markdown**: Do not include markdown syntax in the nodes or relationships.
-    - **No Skip**: Do not skip any part of the text. Extract all relevant information.
-    - **Invalid json output**: Do not provide invalid json output.
-    ## 7. Additional Guidelines
-    - **Start Formatting**: Start with "{", end with "}".
-    """
+
+## Overview
+
+You are a top-tier algorithm designed to extract information in structured formats to build a knowledge graph, where:
+- **Nodes** represent entities and concepts, similar to Wikipedia entries.
+- The goal is to create a knowledge graph that is simple and clear, making it accessible to a wide audience.
+
+## Labeling Nodes
+
+- **Consistency**: Use basic or elementary types for node labels. For instance, label an entity representing a person as **"person"** rather than using more specific terms like "mathematician" or "scientist".
+- **Node IDs**: Use names or human-readable identifiers for node IDs, avoiding integers.
+
+## Handling Numerical Data and Dates
+
+- Integrate numerical data, such as age, as attributes of the nodes.
+- **No Separate Nodes for Dates/Numbers**: Attach dates or numerical values as attributes of nodes, not as separate nodes.
+- **Property Format**: Present properties in a key-value format, using camelCase for property keys (e.g., `birthDate`).
+- **Quotation Marks**: Do not use escaped quotes within property values.
+
+## Coreference Resolution
+
+- **Maintain Entity Consistency**: Ensure consistency in entity references. Use the most complete identifier for an entity mentioned multiple times in the text, even if referred to by different names or pronouns. For example, always use "John Doe" instead of variations like "Joe" or "he".
+
+## Strict Compliance
+
+Strict adherence to these rules is mandatory. Non-compliance will lead to termination.
+
+## Forbidden Formats
+
+- **No HTML**: Exclude HTML tags from nodes or relationships.
+- **No Markdown**: Avoid markdown syntax in nodes or relationships.
+- **No Skip**: Extract all relevant information without skipping any part of the text.
+- **Invalid JSON Output**: Ensure JSON output is valid.
+
+## Additional Guidelines
+
+- **Start Formatting**: Begin with "{" and conclude with "}".
+"""
     parser = JsonOutputParser(pydantic_object=KnowledgeGraph)
     prompt = PromptTemplate(
         template=RULE + "Answer the user query.\n{format_instructions}\n{query}\n",
@@ -172,32 +199,35 @@ def extract_and_store_graph(
     try:
         data = parser.parse(data)
     except OutputParserException:
-        # use llm to make data structure more clear
+        # use openai llm to make data structure more clear
         new_prompt = PromptTemplate(
             template="Organize the input text into the correct json format. \n{data}\n",
             input_variables=["data"],
         )
-        new_chain = new_prompt | llm | parser
+        new_chain = new_prompt | openai_llm
         data:AIMessage = new_chain.invoke({"data": data})
         data:str = data.content
         data = parser.parse(data)
     print("\n\n")
     # Construct a graph document
+    nodes = [map_to_base_node(node) for node in data['nodes']]
+    relationships = [map_to_base_relationship(rel,nodes) for rel in data['rels']]
     graph_document = GraphDocument(
-      nodes = [map_to_base_node(node) for node in data['nodes']],
-      relationships = [map_to_base_relationship(rel) for rel in data['rels']],
+      nodes = nodes,
+      relationships = relationships,
       source = document
     )
-    # graph.add_graph_documents([graph_document])
+    graph.add_graph_documents([graph_document])
     return graph_document
 
 # Read the wikipedia article
-raw_documents = WikipediaLoader(query="Apple inc").load()
+raw_documents = WebBaseLoader("https://iastate.pressbooks.pub/cropimprovement/chapter/basic-principles-of-plant-breeding/")
+raw_documents.requests_kwargs = {"verify":False}
+raw_documents = raw_documents.load()
 # Define chunking strategy
 text_splitter = TokenTextSplitter(chunk_size=2048, chunk_overlap=24)
 # Only take the first the raw_documents
-documents:list[Document] = text_splitter.split_documents(raw_documents[:3])
-import time
+documents:list[Document] = text_splitter.split_documents(raw_documents[:10])
 for i, d in enumerate(documents):
     s = time.time()
     print(f"Processing document {i+1}/{len(documents)}")
