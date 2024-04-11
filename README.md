@@ -1,8 +1,8 @@
 <!--
  * @Author: hibana2077 hibana2077@gmail.com
  * @Date: 2024-03-03 14:51:05
- * @LastEditors: hibana2077 hibana2077@gmaill.com
- * @LastEditTime: 2024-03-20 16:28:12
+ * @LastEditors: hibana2077 hibana2077@gmail.com
+ * @LastEditTime: 2024-04-11 10:47:59
  * @FilePath: \plant_knowledge_pipepline\README.md
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -17,3 +17,42 @@ This is a Data pipeline for plant breeding knowledge.
 ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)
 ![Grafana](https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+
+## Usage
+
+### Prerequisites
+
+- Docker
+- Docker Compose
+
+#### Docker
+
+```bash
+curl -sSL https://get.docker.com | sh
+```
+
+#### Docker Compose
+
+```bash
+apt update && apt install -y docker-compose
+```
+
+### Hadoop
+
+You need to deploy a hadoop cluster first.
+
+(recommend to use cloud service like AWS GCP, also recommend to use another computer to deploy hadoop cluster)
+
+```bash
+git clone https://github.com/hibana2077/plant_knowledge_pipepline.git
+cd plant_knowledge_pipepline/hadoop
+docker-compose up -d
+```
+
+### Full Pipeline
+
+```bash
+git clone https://github.com/hibana2077/plant_knowledge_pipepline.git
+cd plant_knowledge_pipepline
+docker-compose up -d
+```
