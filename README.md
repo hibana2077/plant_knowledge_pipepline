@@ -2,7 +2,7 @@
  * @Author: hibana2077 hibana2077@gmail.com
  * @Date: 2024-03-03 14:51:05
  * @LastEditors: hibana2077 hibana2077@gmail.com
- * @LastEditTime: 2024-04-11 11:47:03
+ * @LastEditTime: 2024-04-11 11:48:59
  * @FilePath: \plant_knowledge_pipepline\README.md
  * @Description: This is readme file.
 -->
@@ -57,6 +57,8 @@ docker-compose up -d
 Now you can access the Neo4j browser at `http://localhost:7474` and the dashboard at `http://localhost:3000`.
 
 If you host on a remote server, you need to change the `NEO4J_HOST` and `NEO4J_BOLT` in the `.env` file.
+
+## Demo Images
 
 ## License
 
