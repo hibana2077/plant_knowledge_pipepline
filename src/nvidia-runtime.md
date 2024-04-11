@@ -29,7 +29,7 @@
 5. **驗證配置**：重啟 Docker 服務後，你可以運行一個簡單的命令來驗證 NVIDIA 運行時是否已正確配置：
 
    ```
-   docker run --runtime=nvidia --rm nvidia/cuda:11.0-base nvidia-smi
+   docker run --runtime=nvidia --rm nvidia/cuda:12.2.0-base-ubuntu22.04 nvidia-smi
    ```
 
    如果一切正常，這個命令將會列出你的 NVIDIA GPU 信息。
