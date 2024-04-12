@@ -1,0 +1,21 @@
+---
+interface Props {
+	Job_name: string;
+	target_url: string;
+	status: string;
+}
+
+var { Job_name, target_url, status } = Astro.props;
+
+Job_name = Job_name || "Job Name";
+target_url = target_url || "https://www.google.com";
+status = status || "success";
+---
+
+<div class="grid grid-cols-3">
+    <p class="text-tremor-content dark:text-dark-tremor-content mx-auto py-2">{ Job_name }</p>
+    <p class="text-tremor-content dark:text-dark-tremor-content mx-auto py-2">
+        <a href={ target_url } class="hover:underline">{ target_url }</a>
+    </p>
+    <p class="text-tremor-content dark:text-dark-tremor-content mx-auto py-2">{ status }</p>
+</div>
