@@ -1,9 +1,12 @@
 ---
 import Navbar from '../layouts/Navbar.astro';
 import Joblist from '../components/Joblist.astro';
+import { SelectHero } from '../components/select.tsx';
 import { LineChartHero } from'../components/Line_Chart.tsx';
 import { Card, Metric, Text } from '@tremor/react';
 import { Divider } from '@tremor/react';
+import { TextInput } from '@tremor/react';
+import { Button } from '@tremor/react';
 ---
 
 <!DOCTYPE html>
@@ -96,19 +99,17 @@ import { Divider } from '@tremor/react';
       <div class="mx-auto max-w-screen-xl mt-6 px-8 border-b-2">
         <div class="grid grid-cols-4 gap-4">
           <div class=" col-span-1"></div>
-          <div class="border-2 rounded-lg col-span-2">
-            <div class="grid grid-cols-2  rounded-t-lg">
-              <p class="text-tremor-content dark:text-dark-tremor-content font-semibold mx-auto py-2">Job Name</p>
-              <input type="text" class="mx-auto" />
+          <div class="border-2 rounded-lg col-span-2 p-6">
+            <div class="grid my-4">
+              <TextInput className="mx-auto max-w-xs" client:load placeholder="Job Name" />
             </div>
-            <div class="grid grid-cols-2 ">
-              <p class="text-tremor-content dark:text-dark-tremor-content font-semibold mx-auto py-2">Target URL</p>
-              <input type="text" class="mx-auto" />
+            <div class="grid my-4">
+              <TextInput className="mx-auto max-w-xs" placeholder="Target URL" client:load />
             </div>
-            <div class="grid grid-cols-2 ">
-              <p class="text-tremor-content dark:text-dark-tremor-content font-semibold mx-auto py-2">Method</p>
-              <input type="text" class="mx-auto" />
+            <div class="grid my-4">
+              <SelectHero client:load />
             </div>
+            <Button variant="primary" className='flex mx-auto' client:load>Search</Button>
           </div>
           <div class=" col-span-1"></div>
         </div>
