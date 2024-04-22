@@ -2,7 +2,7 @@
 Author: hibana2077 hibana2077@gmail.com
 Date: 2024-03-03 19:29:24
 LastEditors: hibana2077 hibana2077@gmaill.com
-LastEditTime: 2024-04-22 16:26:21
+LastEditTime: 2024-04-22 17:06:41
 FilePath: \plant_knowledge_pipepline\src\data_collection_node\main.py
 Description: Scraping data from the web
 '''
@@ -15,8 +15,10 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as parquet
 from langchain_community.document_loaders import WebBaseLoader
+from langchain_community.document_loaders import RecursiveUrlLoader
 from warnings import simplefilter
 from urllib3.exceptions import InsecureRequestWarning
+from typing import Optional
 
 # Basic config
 heartbeat_interval = os.getenv("HEARTBEAT_INTERVAL", 60)
@@ -45,18 +47,7 @@ simplefilter(action="ignore", category=InsecureRequestWarning)
 #     "timestamp": "2024-03-03 19:29:24",
 # }
 
-def process(job_type:str, url:str|list) -> pd.DataFrame:
-    """
-    Process the data based on the given job type and URL.
-
-    Args:
-        job_type (str): The type of job to perform. Can be "single_page" or "multi_page".
-        url (str|list): The URL(s) to process.
-
-    Returns:
-        pd.DataFrame: A DataFrame containing the processed data.
-
-    """
+def process(job_type:str, url:str, prefix:Optional[str]) -> pd.DataFrame:
     if job_type == "single_page":
         loader = WebBaseLoader(url)
         loader.requests_kwargs = {"verify":False}
@@ -73,20 +64,10 @@ def process(job_type:str, url:str|list) -> pd.DataFrame:
         return df
     
     elif job_type == "multi_page":
-        loader = WebBaseLoader(url)
-        loader.requests_kwargs = {"verify":False}
-        data = loader.load()
-        cleaned_list = list()
-        for data_idx in range(len(data)):
-            for idx in range(1, len(data[data_idx].page_content)):
-                if data[0].page_content[idx] != '\n' and data[data_idx].page_content[idx-1] != '\n':
-                    cleaned_list.append(data[data_idx].page_content[idx])
-                elif data[0].page_content[idx] != '\n' and data[data_idx].page_content[idx-1] == '\n':
-                    cleaned_list.append('\n')
-                    cleaned_list.append(data[data_idx].page_content[idx])
-        cleaned_list = "".join(cleaned_list).split("\n")
-        df = pd.DataFrame({'content':cleaned_list})
-        return df
+        multi_pages_loader = RecursiveUrlLoader(url)
+        multi_pages = multi_pages_loader.load()
+        multi_pages = [page.metadata['source'] for page in multi_pages if page.metadata['source'].startswith(prefix)]
+        
         
 if __name__ == "__main__":
     logger.info("Data collection node active")
