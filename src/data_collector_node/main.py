@@ -1,8 +1,8 @@
 '''
 Author: hibana2077 hibana2077@gmail.com
 Date: 2024-03-03 19:29:24
-LastEditors: hibana2077 hibana2077@gmail.com
-LastEditTime: 2024-03-25 08:56:38
+LastEditors: hibana2077 hibana2077@gmaill.com
+LastEditTime: 2024-04-22 16:26:21
 FilePath: \plant_knowledge_pipepline\src\data_collection_node\main.py
 Description: Scraping data from the web
 '''
@@ -46,6 +46,17 @@ simplefilter(action="ignore", category=InsecureRequestWarning)
 # }
 
 def process(job_type:str, url:str|list) -> pd.DataFrame:
+    """
+    Process the data based on the given job type and URL.
+
+    Args:
+        job_type (str): The type of job to perform. Can be "single_page" or "multi_page".
+        url (str|list): The URL(s) to process.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the processed data.
+
+    """
     if job_type == "single_page":
         loader = WebBaseLoader(url)
         loader.requests_kwargs = {"verify":False}
