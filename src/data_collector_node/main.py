@@ -2,11 +2,12 @@
 Author: hibana2077 hibana2077@gmail.com
 Date: 2024-03-03 19:29:24
 LastEditors: hibana2077 hibana2077@gmaill.com
-LastEditTime: 2024-04-22 17:06:41
+LastEditTime: 2024-04-29 11:42:44
 FilePath: \plant_knowledge_pipepline\src\data_collection_node\main.py
 Description: Scraping data from the web
 '''
 import redis
+import requests
 import os
 import logging
 import time
@@ -49,25 +50,26 @@ simplefilter(action="ignore", category=InsecureRequestWarning)
 
 def process(job_type:str, url:str, prefix:Optional[str]) -> pd.DataFrame:
     if job_type == "single_page":
-        loader = WebBaseLoader(url)
-        loader.requests_kwargs = {"verify":False}
-        data = loader.load()
-        cleaned_list = list()
-        for idx in range(1, len(data[0].page_content)):
-            if data[0].page_content[idx] != '\n' and data[0].page_content[idx-1] != '\n':
-                cleaned_list.append(data[0].page_content[idx])
-            elif data[0].page_content[idx] != '\n' and data[0].page_content[idx-1] == '\n':
-                cleaned_list.append('\n')
-                cleaned_list.append(data[0].page_content[idx])
-        cleaned_list = "".join(cleaned_list).split("\n")
-        df = pd.DataFrame({'content':cleaned_list})
+        query_url = f"https://r.jina.ai/{url}"
+        r = requests.get(query_url)
+        if r.status_code != 200:
+            raise Exception(f"Failed to fetch data from {query_url}")
+        df = pd.DataFrame({'content':r.text, 'url':url}, index=[0])
         return df
     
     elif job_type == "multi_page":
         multi_pages_loader = RecursiveUrlLoader(url)
         multi_pages = multi_pages_loader.load()
         multi_pages = [page.metadata['source'] for page in multi_pages if page.metadata['source'].startswith(prefix)]
-        
+        data = []
+        for page in multi_pages:
+            query_url = f"https://r.jina.ai/{page}"
+            r = requests.get(query_url)
+            if r.status_code != 200:
+                raise Exception(f"Failed to fetch data from {query_url}")
+            data.append({'content':r.text, 'url':page})
+        df = pd.DataFrame(data)
+        return df
         
 if __name__ == "__main__":
     logger.info("Data collection node active")
